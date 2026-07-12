@@ -105,7 +105,10 @@ def kutulardan_tahta_oku():
     return tahta
 
 
-def bonus_placeholder(satir, sutun):
+def bonus_yazisi(satir, sutun):
+    if satir == 7 and sutun == 7:
+        return "★"
+
     bonus = TAHTA_BONUSLARI[satir][sutun]
 
     if bonus == ".":
@@ -169,6 +172,13 @@ def tahta_yazdir_web(tahta, orijinal_tahta=None):
             font-weight: 800;
         }
 
+        .center-star {
+            font-size: 15px;
+            color: #999999;
+            opacity: 0.55;
+            font-weight: 900;
+        }
+
         .filled-old {
             background: #ffe28a;
         }
@@ -183,7 +193,7 @@ def tahta_yazdir_web(tahta, orijinal_tahta=None):
     <div class="board-with-coords">
     """
 
-    html += '<div></div>'
+    html += "<div></div>"
 
     for sutun in range(TAHTA_BOYUTU):
         html += f'<div class="coord">{sutun}</div>'
@@ -193,10 +203,12 @@ def tahta_yazdir_web(tahta, orijinal_tahta=None):
 
         for sutun_index, hucre in enumerate(satir):
             if hucre == ".":
-                bonus = TAHTA_BONUSLARI[satir_index][sutun_index]
+                bonus = bonus_yazisi(satir_index, sutun_index)
 
-                if bonus == ".":
+                if bonus == "":
                     html += '<div class="cell"></div>'
+                elif bonus == "★":
+                    html += '<div class="cell"><span class="center-star">★</span></div>'
                 else:
                     html += f'<div class="cell"><span class="bonus-ghost">{bonus}</span></div>'
             else:
@@ -262,7 +274,7 @@ col1, col2 = st.columns([1.45, 1])
 
 with col1:
     st.subheader("1) Tahtayı Düzenle")
-    st.caption("Üstte sütun, solda satır numarası var. H2/H3/K2/K3 yazıları bonus kareleri silik gösterir.")
+    st.caption("Üstte sütun, solda satır numarası var. H2/H3/K2/K3 yazıları bonus kareleri silik gösterir. Orta kare yıldızdır.")
 
     baslik_kolonlari = st.columns([0.45] + [1 for _ in range(TAHTA_BOYUTU)])
 
@@ -312,7 +324,7 @@ with col1:
                     label=f"{satir}-{sutun}",
                     key=hucre_key(satir, sutun),
                     max_chars=1,
-                    placeholder=bonus_placeholder(satir, sutun),
+                    placeholder=bonus_yazisi(satir, sutun),
                     label_visibility="collapsed"
                 )
 
