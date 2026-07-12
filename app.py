@@ -45,6 +45,9 @@ def tahta_state_baslat():
     if "arama_suresi" not in st.session_state:
         st.session_state.arama_suresi = 0
 
+    if "bekleyen_tahta" not in st.session_state:
+        st.session_state.bekleyen_tahta = None
+
     for satir in range(TAHTA_BOYUTU):
         for sutun in range(TAHTA_BOYUTU):
             key = hucre_key(satir, sutun)
@@ -70,6 +73,12 @@ def tahtayi_kutulara_yaz(tahta):
                 st.session_state[key] = ""
             else:
                 st.session_state[key] = hucre
+
+
+def bekleyen_tahtayi_uygula():
+    if st.session_state.bekleyen_tahta is not None:
+        tahtayi_kutulara_yaz(st.session_state.bekleyen_tahta)
+        st.session_state.bekleyen_tahta = None
 
 
 def kutulardan_tahta_oku():
@@ -239,6 +248,7 @@ def hamle_bilgisi_yaz(hamle):
 
 
 tahta_state_baslat()
+bekleyen_tahtayi_uygula()
 
 
 baslik_col, link_col = st.columns([4, 1])
@@ -258,7 +268,7 @@ ust1, ust2 = st.columns([1, 3])
 
 with ust1:
     if st.button("Boş Tahta", use_container_width=True):
-        tahtayi_kutulara_yaz(bos_tahta_olustur())
+        st.session_state.bekleyen_tahta = bos_tahta_olustur()
         sonuc_temizle()
         st.rerun()
 
@@ -395,7 +405,7 @@ with col2:
         tahta_yazdir_web(yeni_tahta, orijinal_tahta=tahta)
 
         if st.button("En İyi Hamleyi Tabloya İşle", type="primary", use_container_width=True):
-            tahtayi_kutulara_yaz(yeni_tahta)
+            st.session_state.bekleyen_tahta = yeni_tahta
             sonuc_temizle()
             st.rerun()
 
