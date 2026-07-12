@@ -16,61 +16,6 @@ st.set_page_config(
 )
 
 
-st.markdown(
-    f"""
-    <style>
-        .ertoland-badge {{
-            position: fixed !important;
-            right: 20px !important;
-            bottom: 20px !important;
-            z-index: 999999 !important;
-
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-
-            background: linear-gradient(135deg, #111827, #374151) !important;
-            color: white !important;
-            padding: 10px 15px !important;
-            border-radius: 999px !important;
-
-            font-size: 13px !important;
-            font-weight: 800 !important;
-            letter-spacing: 1px !important;
-
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.30) !important;
-            border: 1px solid rgba(255, 255, 255, 0.20) !important;
-
-            text-decoration: none !important;
-            cursor: pointer !important;
-            opacity: 0.94 !important;
-            user-select: none !important;
-            transition: all 0.2s ease !important;
-        }}
-
-        .ertoland-badge:hover {{
-            opacity: 1 !important;
-            transform: scale(1.05) !important;
-        }}
-
-        .ertoland-badge span {{
-            color: #facc15 !important;
-        }}
-    </style>
-
-    <a
-        class="ertoland-badge"
-        href="{YOUTUBE_LINK}"
-        target="_blank"
-        rel="noopener noreferrer"
-    >
-        ⚡ ERTO<span>LAND6</span>
-    </a>
-    """,
-    unsafe_allow_html=True
-)
-
-
 TURKCE_HARFLER = set("ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ")
 
 
@@ -289,9 +234,17 @@ if "arama_suresi" not in st.session_state:
     st.session_state.arama_suresi = 0
 
 
-st.title("🧩 EN İYİ HAMLENİ GÖR")
-st.write("Kutulara harfleri gir, boş kareleri boş bırak. Değişiklikler sağdaki tabloda anlık görünür.")
-st.write("ERTOLAND6'dan selamlar.")
+baslik_col, link_col = st.columns([4, 1])
+
+with baslik_col:
+    st.title("🧩 EN İYİ HAMLENİ GÖR")
+    st.write("Kutulara harfleri gir, boş kareleri boş bırak. Değişiklikler sağdaki tabloda anlık görünür.")
+    st.write("ERTOLAND6'dan selamlar.")
+
+with link_col:
+    st.write("")
+    st.write("")
+    st.link_button("⚡ ERTOLAND6", YOUTUBE_LINK, use_container_width=True)
 
 
 ust1, ust2, ust3 = st.columns([1, 1, 2])
