@@ -3,6 +3,7 @@ import streamlit as st
 
 from main import sozluk_yukle, turkce_buyuk_harf, puan_hesapla
 from solver import hamleleri_bul, hamleyi_tahtada_goster
+from bonus import TAHTA_BONUSLARI
 
 
 YOUTUBE_LINK = "https://www.youtube.com/watch?v=GGtVmxTFJ2E&list=LL&index=72"
@@ -32,9 +33,6 @@ def hucre_key(satir, sutun):
 
 
 def tahta_state_baslat():
-    if "editor_version" not in st.session_state:
-        st.session_state.editor_version = 0
-
     if "hamleler" not in st.session_state:
         st.session_state.hamleler = []
 
@@ -73,8 +71,6 @@ def tahtayi_kutulara_yaz(tahta):
             else:
                 st.session_state[key] = hucre
 
-    st.session_state.editor_version += 1
-
 
 def kutulardan_tahta_oku():
     tahta = []
@@ -109,15 +105,48 @@ def kutulardan_tahta_oku():
     return tahta
 
 
+def bonus_placeholder(satir, sutun):
+    bonus = TAHTA_BONUSLARI[satir][sutun]
+
+    if bonus == ".":
+        return ""
+
+    return bonus
+
+
 def tahta_yazdir_web(tahta, orijinal_tahta=None):
     html = """
     <style>
-        .board {
+        .board-with-coords {
             display: grid;
-            grid-template-columns: repeat(15, 30px);
+            grid-template-columns: 24px repeat(15, 30px);
             gap: 3px;
             margin-top: 10px;
+            align-items: center;
         }
+
+        .coord {
+            width: 30px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #666666;
+        }
+
+        .row-coord {
+            width: 24px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #666666;
+        }
+
         .cell {
             width: 30px;
             height: 30px;
@@ -130,23 +159,46 @@ def tahta_yazdir_web(tahta, orijinal_tahta=None):
             font-weight: bold;
             font-size: 16px;
             color: #5b3a2e;
+            position: relative;
         }
+
+        .bonus-ghost {
+            font-size: 9px;
+            color: #999999;
+            opacity: 0.55;
+            font-weight: 800;
+        }
+
         .filled-old {
             background: #ffe28a;
         }
+
         .filled-new {
             background: #78e08f;
             border: 2px solid #218c74;
             color: #1e272e;
         }
     </style>
-    <div class="board">
+
+    <div class="board-with-coords">
     """
 
+    html += '<div></div>'
+
+    for sutun in range(TAHTA_BOYUTU):
+        html += f'<div class="coord">{sutun}</div>'
+
     for satir_index, satir in enumerate(tahta):
+        html += f'<div class="row-coord">{satir_index}</div>'
+
         for sutun_index, hucre in enumerate(satir):
             if hucre == ".":
-                html += '<div class="cell"></div>'
+                bonus = TAHTA_BONUSLARI[satir_index][sutun_index]
+
+                if bonus == ".":
+                    html += '<div class="cell"></div>'
+                else:
+                    html += f'<div class="cell"><span class="bonus-ghost">{bonus}</span></div>'
             else:
                 yeni_harf_mi = False
 
@@ -206,21 +258,61 @@ with ust2:
     )
 
 
-col1, col2 = st.columns([1.35, 1])
+col1, col2 = st.columns([1.45, 1])
 
 with col1:
     st.subheader("1) Tahtayı Düzenle")
-    st.caption("Her kutuya en fazla 1 harf yaz. Boş kareleri boş bırak.")
+    st.caption("Üstte sütun, solda satır numarası var. H2/H3/K2/K3 yazıları bonus kareleri silik gösterir.")
+
+    baslik_kolonlari = st.columns([0.45] + [1 for _ in range(TAHTA_BOYUTU)])
+
+    with baslik_kolonlari[0]:
+        st.markdown(
+            "<div style='height: 26px;'></div>",
+            unsafe_allow_html=True
+        )
+
+    for sutun in range(TAHTA_BOYUTU):
+        with baslik_kolonlari[sutun + 1]:
+            st.markdown(
+                f"""
+                <div style='
+                    text-align:center;
+                    font-size:12px;
+                    font-weight:800;
+                    color:#666;
+                    height:26px;
+                    line-height:26px;
+                '>{sutun}</div>
+                """,
+                unsafe_allow_html=True
+            )
 
     for satir in range(TAHTA_BOYUTU):
-        kolonlar = st.columns(TAHTA_BOYUTU)
+        kolonlar = st.columns([0.45] + [1 for _ in range(TAHTA_BOYUTU)])
+
+        with kolonlar[0]:
+            st.markdown(
+                f"""
+                <div style='
+                    text-align:center;
+                    font-size:12px;
+                    font-weight:800;
+                    color:#666;
+                    height:38px;
+                    line-height:38px;
+                '>{satir}</div>
+                """,
+                unsafe_allow_html=True
+            )
 
         for sutun in range(TAHTA_BOYUTU):
-            with kolonlar[sutun]:
+            with kolonlar[sutun + 1]:
                 st.text_input(
                     label=f"{satir}-{sutun}",
                     key=hucre_key(satir, sutun),
                     max_chars=1,
+                    placeholder=bonus_placeholder(satir, sutun),
                     label_visibility="collapsed"
                 )
 
