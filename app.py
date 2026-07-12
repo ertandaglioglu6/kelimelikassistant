@@ -1,5 +1,4 @@
 import time
-import pandas as pd
 import streamlit as st
 
 from main import sozluk_yukle, turkce_buyuk_harf, puan_hesapla
@@ -7,6 +6,9 @@ from solver import hamleleri_bul, hamleyi_tahtada_goster
 
 
 YOUTUBE_LINK = "https://www.youtube.com/watch?v=GGtVmxTFJ2E&list=LL&index=72"
+
+TURKCE_HARFLER = set("ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ")
+TAHTA_BOYUTU = 15
 
 
 st.set_page_config(
@@ -16,97 +18,73 @@ st.set_page_config(
 )
 
 
-TURKCE_HARFLER = set("ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ")
-
-
-ORNEK_TAHTA = """...............
-...............
-...............
-...............
-...............
-...............
-...............
-...............
-...............
-...............
-...............
-...............
-...............
-...............
-..............."""
+@st.cache_data
+def sozluk_cache_yukle():
+    return sozluk_yukle("kelimeler.txt")
 
 
 def bos_tahta_olustur():
-    return [["" for _ in range(15)] for _ in range(15)]
+    return [["." for _ in range(TAHTA_BOYUTU)] for _ in range(TAHTA_BOYUTU)]
 
 
-def metinden_tahta_listesi_olustur(tahta_metni):
-    satirlar = tahta_metni.strip().splitlines()
-
-    if len(satirlar) != 15:
-        raise ValueError("Tahta tam 15 satır olmalı.")
-
-    tahta = []
-
-    for satir in satirlar:
-        satir = turkce_buyuk_harf(satir.strip().replace(" ", ""))
-
-        if len(satir) != 15:
-            raise ValueError("Her satır tam 15 karakter olmalı.")
-
-        tahta_satiri = []
-
-        for karakter in satir:
-            if karakter == ".":
-                tahta_satiri.append("")
-            elif karakter in TURKCE_HARFLER:
-                tahta_satiri.append(karakter)
-            else:
-                raise ValueError(f"Geçersiz karakter var: {karakter}")
-
-        tahta.append(tahta_satiri)
-
-    return tahta
+def hucre_key(satir, sutun):
+    return f"hucre_{satir}_{sutun}"
 
 
-def listeyi_dataframe_yap(tahta_listesi):
-    return pd.DataFrame(
-        tahta_listesi,
-        columns=[str(i) for i in range(15)],
-        index=[str(i) for i in range(15)]
-    )
+def tahta_state_baslat():
+    if "editor_version" not in st.session_state:
+        st.session_state.editor_version = 0
+
+    if "hamleler" not in st.session_state:
+        st.session_state.hamleler = []
+
+    if "arama_yapildi" not in st.session_state:
+        st.session_state.arama_yapildi = False
+
+    if "arama_tahtasi" not in st.session_state:
+        st.session_state.arama_tahtasi = None
+
+    if "arama_suresi" not in st.session_state:
+        st.session_state.arama_suresi = 0
+
+    for satir in range(TAHTA_BOYUTU):
+        for sutun in range(TAHTA_BOYUTU):
+            key = hucre_key(satir, sutun)
+
+            if key not in st.session_state:
+                st.session_state[key] = ""
 
 
-def tahta_nokta_to_dataframe(tahta):
-    yeni_tahta = []
+def sonuc_temizle():
+    st.session_state.hamleler = []
+    st.session_state.arama_yapildi = False
+    st.session_state.arama_tahtasi = None
+    st.session_state.arama_suresi = 0
 
-    for satir in tahta:
-        yeni_satir = []
 
-        for hucre in satir:
+def tahtayi_kutulara_yaz(tahta):
+    for satir in range(TAHTA_BOYUTU):
+        for sutun in range(TAHTA_BOYUTU):
+            key = hucre_key(satir, sutun)
+            hucre = tahta[satir][sutun]
+
             if hucre == ".":
-                yeni_satir.append("")
+                st.session_state[key] = ""
             else:
-                yeni_satir.append(hucre)
+                st.session_state[key] = hucre
 
-        yeni_tahta.append(yeni_satir)
-
-    return listeyi_dataframe_yap(yeni_tahta)
+    st.session_state.editor_version += 1
 
 
-def dataframe_tahta_yap(df):
+def kutulardan_tahta_oku():
     tahta = []
 
-    for satir_index in range(15):
+    for satir in range(TAHTA_BOYUTU):
         tahta_satiri = []
 
-        for sutun_index in range(15):
-            deger = df.iloc[satir_index, sutun_index]
-
-            if pd.isna(deger):
-                deger = ""
-
-            deger = str(deger).strip()
+        for sutun in range(TAHTA_BOYUTU):
+            key = hucre_key(satir, sutun)
+            deger = str(st.session_state.get(key, "")).strip()
 
             if deger == "" or deger == ".":
                 tahta_satiri.append(".")
@@ -116,12 +94,12 @@ def dataframe_tahta_yap(df):
 
             if len(deger) != 1:
                 raise ValueError(
-                    f"{satir_index}. satır {sutun_index}. sütunda tek harf olmalı."
+                    f"{satir}. satır {sutun}. sütunda tek harf olmalı."
                 )
 
             if deger not in TURKCE_HARFLER:
                 raise ValueError(
-                    f"{satir_index}. satır {sutun_index}. sütunda geçersiz karakter var: {deger}"
+                    f"{satir}. satır {sutun}. sütunda geçersiz karakter var: {deger}"
                 )
 
             tahta_satiri.append(deger)
@@ -196,42 +174,7 @@ def hamle_bilgisi_yaz(hamle):
     )
 
 
-@st.cache_data
-def sozluk_cache_yukle():
-    return sozluk_yukle("kelimeler.txt")
-
-
-def sonuc_temizle():
-    st.session_state.hamleler = []
-    st.session_state.arama_yapildi = False
-    st.session_state.arama_tahtasi = None
-    st.session_state.arama_suresi = 0
-
-
-def editor_yenile(yeni_df):
-    st.session_state.tahta_df = yeni_df
-    st.session_state.editor_key_no += 1
-
-
-if "editor_key_no" not in st.session_state:
-    st.session_state.editor_key_no = 0
-
-if "tahta_df" not in st.session_state:
-    st.session_state.tahta_df = listeyi_dataframe_yap(
-        metinden_tahta_listesi_olustur(ORNEK_TAHTA)
-    )
-
-if "hamleler" not in st.session_state:
-    st.session_state.hamleler = []
-
-if "arama_yapildi" not in st.session_state:
-    st.session_state.arama_yapildi = False
-
-if "arama_tahtasi" not in st.session_state:
-    st.session_state.arama_tahtasi = None
-
-if "arama_suresi" not in st.session_state:
-    st.session_state.arama_suresi = 0
+tahta_state_baslat()
 
 
 baslik_col, link_col = st.columns([4, 1])
@@ -247,23 +190,15 @@ with link_col:
     st.link_button("⚡ ERTOLAND6", YOUTUBE_LINK, use_container_width=True)
 
 
-ust1, ust2, ust3 = st.columns([1, 1, 2])
+ust1, ust2 = st.columns([1, 3])
 
 with ust1:
     if st.button("Boş Tahta", use_container_width=True):
-        editor_yenile(listeyi_dataframe_yap(bos_tahta_olustur()))
+        tahtayi_kutulara_yaz(bos_tahta_olustur())
         sonuc_temizle()
         st.rerun()
 
 with ust2:
-    if st.button("Örnek Tahta", use_container_width=True):
-        editor_yenile(
-            listeyi_dataframe_yap(metinden_tahta_listesi_olustur(ORNEK_TAHTA))
-        )
-        sonuc_temizle()
-        st.rerun()
-
-with ust3:
     eldeki_harfler = st.text_input(
         "Elindeki harfler",
         value="",
@@ -277,18 +212,20 @@ with col1:
     st.subheader("1) Tahtayı Düzenle")
     st.caption("Her kutuya en fazla 1 harf yaz. Boş kareleri boş bırak.")
 
-    editor_key = f"tahta_editor_{st.session_state.editor_key_no}"
+    for satir in range(TAHTA_BOYUTU):
+        kolonlar = st.columns(TAHTA_BOYUTU)
 
-    duzenlenen_df = st.data_editor(
-        st.session_state.tahta_df,
-        num_rows="fixed",
-        use_container_width=True,
-        height=520,
-        key=editor_key
-    )
+        for sutun in range(TAHTA_BOYUTU):
+            with kolonlar[sutun]:
+                st.text_input(
+                    label=f"{satir}-{sutun}",
+                    key=hucre_key(satir, sutun),
+                    max_chars=1,
+                    label_visibility="collapsed"
+                )
 
     try:
-        guncel_tahta = dataframe_tahta_yap(duzenlenen_df)
+        guncel_tahta = kutulardan_tahta_oku()
     except Exception:
         guncel_tahta = None
 
@@ -296,9 +233,7 @@ with col1:
 
     if hamle_bul:
         try:
-            st.session_state.tahta_df = duzenlenen_df
-
-            tahta = dataframe_tahta_yap(duzenlenen_df)
+            tahta = kutulardan_tahta_oku()
             temiz_harfler = turkce_buyuk_harf(eldeki_harfler.replace(" ", ""))
 
             sozluk = sozluk_cache_yukle()
@@ -356,8 +291,7 @@ with col2:
         tahta_yazdir_web(yeni_tahta, orijinal_tahta=tahta)
 
         if st.button("En İyi Hamleyi Tabloya İşle", type="primary", use_container_width=True):
-            yeni_df = tahta_nokta_to_dataframe(yeni_tahta)
-            editor_yenile(yeni_df)
+            tahtayi_kutulara_yaz(yeni_tahta)
             sonuc_temizle()
             st.rerun()
 
