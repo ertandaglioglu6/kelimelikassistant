@@ -16,40 +16,45 @@ st.set_page_config(
 )
 
 
-st.html(
+st.markdown(
     f"""
     <style>
         .ertoland-badge {{
-            position: fixed;
-            right: 20px;
-            bottom: 20px;
-            z-index: 999999;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #111827, #374151);
+            position: fixed !important;
+            right: 20px !important;
+            bottom: 20px !important;
+            z-index: 999999 !important;
+
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+
+            background: linear-gradient(135deg, #111827, #374151) !important;
             color: white !important;
-            padding: 10px 15px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.30);
-            border: 1px solid rgba(255, 255, 255, 0.20);
+            padding: 10px 15px !important;
+            border-radius: 999px !important;
+
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            letter-spacing: 1px !important;
+
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.30) !important;
+            border: 1px solid rgba(255, 255, 255, 0.20) !important;
+
             text-decoration: none !important;
-            cursor: pointer;
-            opacity: 0.94;
-            user-select: none;
-            transition: all 0.2s ease;
+            cursor: pointer !important;
+            opacity: 0.94 !important;
+            user-select: none !important;
+            transition: all 0.2s ease !important;
         }}
 
         .ertoland-badge:hover {{
-            opacity: 1;
-            transform: scale(1.05);
+            opacity: 1 !important;
+            transform: scale(1.05) !important;
         }}
 
         .ertoland-badge span {{
-            color: #facc15;
+            color: #facc15 !important;
         }}
     </style>
 
@@ -61,7 +66,8 @@ st.html(
     >
         ⚡ ERTO<span>LAND6</span>
     </a>
-    """
+    """,
+    unsafe_allow_html=True
 )
 
 
