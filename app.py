@@ -1,3 +1,4 @@
+import io
 import time
 import streamlit as st
 
@@ -332,6 +333,33 @@ st.markdown(
             box-shadow: 0 0 0 2px rgba(255,216,77,.16) !important;
         }
 
+        div[data-testid="stFileUploader"] {
+            background: #071426;
+            border: 1.5px dashed #315a8b;
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        div[data-testid="stFileUploader"]:hover {
+            border-color: #f2c230;
+        }
+
+        div[data-testid="stFileUploader"] section {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .image-note {
+            background: #0c2342;
+            border: 1px solid #2b5688;
+            border-radius: 11px;
+            padding: 10px 12px;
+            color: #b8c7da;
+            font-size: 12px;
+            line-height: 1.55;
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 900px) {
             .block-container {
                 padding-left: .65rem;
@@ -368,6 +396,9 @@ def tahta_state_baslat():
         "arama_tahtasi": None,
         "arama_suresi": 0,
         "bekleyen_tahta": None,
+        "ekran_goruntusu_bytes": None,
+        "ekran_goruntusu_kaynagi": None,
+        "eldeki_harfler": "",
     }
 
     for anahtar, deger in varsayilanlar.items():
@@ -433,7 +464,7 @@ def kutulardan_tahta_oku():
     return tahta
 
 
-def metinden_tahta_olustur(tahta_metni):
+def metinden_tahta_ve_harfler_olustur(tahta_metni):
     satirlar = []
 
     for satir in tahta_metni.splitlines():
@@ -445,20 +476,38 @@ def metinden_tahta_olustur(tahta_metni):
         for karakter in (" ", "\t"):
             temiz_satir = temiz_satir.replace(karakter, "")
 
-        for karakter in ("-", "_", "·", "*", "★"):
-            temiz_satir = temiz_satir.replace(karakter, ".")
-
         temiz_satir = turkce_buyuk_harf(temiz_satir)
         satirlar.append(temiz_satir)
 
-    if len(satirlar) != TAHTA_BOYUTU:
+    if len(satirlar) not in (TAHTA_BOYUTU, TAHTA_BOYUTU + 1):
         raise ValueError(
-            f"Tahta tam 15 satır olmalı. Şu an {len(satirlar)} satır var."
+            "Metin 15 veya 16 satır olmalı. "
+            f"Şu an {len(satirlar)} satır var."
         )
+
+    tahta_satirlari = satirlar[:TAHTA_BOYUTU]
+    eldeki_harfler = ""
+
+    if len(satirlar) == TAHTA_BOYUTU + 1:
+        eldeki_harfler = satirlar[-1]
+
+        if len(eldeki_harfler) > 7:
+            raise ValueError(
+                "16. satırdaki eldeki taşlar en fazla 7 karakter olmalı."
+            )
+
+        for karakter in eldeki_harfler:
+            if karakter != "*" and karakter not in TURKCE_HARFLER:
+                raise ValueError(
+                    f"16. satırda geçersiz karakter var: {karakter}"
+                )
 
     tahta = []
 
-    for satir_no, satir in enumerate(satirlar):
+    for satir_no, satir in enumerate(tahta_satirlari):
+        for karakter in ("-", "_", "·", "*", "★"):
+            satir = satir.replace(karakter, ".")
+
         if len(satir) != TAHTA_BOYUTU:
             raise ValueError(
                 f"{satir_no}. satır tam 15 karakter olmalı. "
@@ -480,7 +529,27 @@ def metinden_tahta_olustur(tahta_metni):
 
         tahta.append(tahta_satiri)
 
-    return tahta
+    return tahta, eldeki_harfler
+
+
+def ekran_goruntusunu_kaydet(gorsel, kaynak):
+    if gorsel is None:
+        return
+
+    if hasattr(gorsel, "getvalue"):
+        gorsel_bytes = gorsel.getvalue()
+    else:
+        tampon = io.BytesIO()
+        gorsel.save(tampon, format="PNG")
+        gorsel_bytes = tampon.getvalue()
+
+    st.session_state.ekran_goruntusu_bytes = gorsel_bytes
+    st.session_state.ekran_goruntusu_kaynagi = kaynak
+
+
+def ekran_goruntusunu_temizle():
+    st.session_state.ekran_goruntusu_bytes = None
+    st.session_state.ekran_goruntusu_kaynagi = None
 
 
 def bonus_yazisi(satir, sutun):
@@ -568,7 +637,7 @@ with st.container(border=True):
     with kontrol2:
         eldeki_harfler = st.text_input(
             "Elindeki taşlar",
-            value="",
+            key="eldeki_harfler",
             placeholder="Mesela: ÇJÜLLK ya da ABCD*EF",
             help="Joker varsa * koy kanka."
         )
@@ -607,21 +676,32 @@ with sol_kolon:
 
         with st.expander("📋 Toplu Saha Kurulumu", expanded=False):
             st.caption(
-                "15 satır ve her satırda 15 karakter olmalı. "
-                "Boş kare için nokta (.) kullan."
+                "İlk 15 satır tahtadır ve her satır 15 karakter olmalı. "
+                "İstersen 16. satıra elindeki taşları yazabilirsin. "
+                "16. satır yoksa taşları yukarıdan manuel girersin."
             )
 
             toplu_tahta_metni = st.text_area(
                 "Tahta metni",
                 value="",
                 height=250,
-                placeholder="\n".join(["." * 15 for _ in range(15)])
+                placeholder=(
+                    "\n".join(["." * 15 for _ in range(15)])
+                    + "\nABCÇ*EF"
+                )
             )
 
             if st.button("📥 Tahtaya Aktar", use_container_width=True):
                 try:
-                    yeni_tahta = metinden_tahta_olustur(toplu_tahta_metni)
+                    yeni_tahta, yeni_harfler = metinden_tahta_ve_harfler_olustur(
+                        toplu_tahta_metni
+                    )
+
                     st.session_state.bekleyen_tahta = yeni_tahta
+
+                    if yeni_harfler:
+                        st.session_state.eldeki_harfler = yeni_harfler
+
                     sonuc_temizle()
                     st.rerun()
                 except Exception as hata:
@@ -693,6 +773,61 @@ with sol_kolon:
 
 
 with sag_kolon:
+    with st.container(border=True):
+        st.markdown('<div class="eyebrow">Ekran Görüntüsü</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Görseli Ekle</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="section-help">'
+            'Bilgisayarından ekran görüntüsünü seçip yükleyebilirsin.'
+            '</div>',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            """
+            <div class="image-note">
+                Windows: <b>Win + Shift + S</b> ile ekran görüntüsünü al.<br>
+                Ardından görseli kaydedip aşağıdaki alandan seç.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        dosyadan_gorsel = st.file_uploader(
+            "Dosyadan ekran görüntüsü seç",
+            type=["png", "jpg", "jpeg", "webp"],
+            accept_multiple_files=False,
+            help="PNG, JPG, JPEG veya WEBP yükleyebilirsin."
+        )
+
+        if dosyadan_gorsel is not None:
+            ekran_goruntusunu_kaydet(dosyadan_gorsel, "Dosyadan seçildi")
+
+        st.caption(
+            "Şimdilik görseli dosyadan seç. "
+            "Ctrl+V ile doğrudan yapıştırmayı sonraki adımda daha sağlam şekilde ekleyeceğiz."
+        )
+
+        if st.session_state.ekran_goruntusu_bytes is not None:
+            st.success(
+                f"Görsel hazır: {st.session_state.ekran_goruntusu_kaynagi}"
+            )
+            st.image(
+                st.session_state.ekran_goruntusu_bytes,
+                caption="OCR için kullanılacak ekran görüntüsü",
+                use_container_width=True
+            )
+
+            if st.button(
+                "🗑️ Görseli Kaldır",
+                use_container_width=True,
+                key="ekran_goruntusunu_kaldir"
+            ):
+                ekran_goruntusunu_temizle()
+                st.rerun()
+        else:
+            st.info("Henüz bir ekran görüntüsü eklenmedi.")
+
     with st.container(border=True):
         st.markdown('<div class="eyebrow">Anlık Görünüm</div>', unsafe_allow_html=True)
         st.markdown('<div class="section-title">Tahtanın Son Hali</div>', unsafe_allow_html=True)
