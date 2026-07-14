@@ -1,6 +1,3 @@
-
-
-
 import time
 import streamlit as st
 
@@ -27,10 +24,8 @@ st.markdown(
     """
     <style>
         .stApp {
-            background:
-                radial-gradient(circle at top left, rgba(71, 118, 230, 0.10), transparent 34%),
-                radial-gradient(circle at top right, rgba(142, 84, 233, 0.10), transparent 28%),
-                #f6f8fc;
+            background: #f3f5f4;
+            color: #263238;
         }
 
         .block-container {
@@ -44,105 +39,125 @@ st.markdown(
         }
 
         .hero-card {
-            background: linear-gradient(135deg, #1f2937 0%, #334155 50%, #4338ca 100%);
-            border-radius: 24px;
-            padding: 28px 30px;
+            background: #dfe8e5;
+            border: 1px solid #c9d6d2;
+            border-radius: 20px;
+            padding: 25px 28px;
             margin-bottom: 18px;
-            box-shadow: 0 18px 45px rgba(30, 41, 59, 0.18);
-            color: white;
+            box-shadow: 0 8px 22px rgba(51, 65, 85, 0.07);
+            color: #263936;
         }
 
         .hero-title {
-            font-size: 34px;
-            font-weight: 900;
+            font-size: 32px;
+            font-weight: 850;
             margin: 0;
-            letter-spacing: -0.8px;
+            letter-spacing: -0.6px;
+            color: #29423d;
         }
 
         .hero-subtitle {
             margin-top: 8px;
             margin-bottom: 0;
-            color: rgba(255, 255, 255, 0.78);
+            color: #61736f;
             font-size: 15px;
         }
 
         .section-card {
-            background: rgba(255, 255, 255, 0.88);
-            border: 1px solid rgba(148, 163, 184, 0.22);
-            border-radius: 20px;
+            background: #fbfcfb;
+            border: 1px solid #dde4e1;
+            border-radius: 18px;
             padding: 18px;
-            box-shadow: 0 10px 32px rgba(15, 23, 42, 0.07);
+            box-shadow: 0 6px 18px rgba(51, 65, 85, 0.05);
             margin-bottom: 14px;
         }
 
         .mini-label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
             letter-spacing: .08em;
             text-transform: uppercase;
-            color: #64748b;
+            color: #71817d;
             margin-bottom: 4px;
+        }
+
+        h1, h2, h3 {
+            color: #2d3d3a !important;
+        }
+
+        p, label, .stCaption {
+            color: #5e6d69;
         }
 
         div[data-testid="stTextInput"] input,
         div[data-testid="stTextArea"] textarea {
             border-radius: 10px !important;
-            border: 1px solid #cbd5e1 !important;
-            background: white !important;
+            border: 1px solid #d2dbd8 !important;
+            background: #ffffff !important;
+            color: #2f3e3b !important;
         }
 
         div[data-testid="stTextInput"] input:focus,
         div[data-testid="stTextArea"] textarea:focus {
-            border-color: #6366f1 !important;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15) !important;
+            border-color: #7d9d96 !important;
+            box-shadow: 0 0 0 2px rgba(125, 157, 150, 0.12) !important;
         }
 
         div.stButton > button {
-            border-radius: 12px;
-            font-weight: 800;
-            min-height: 44px;
-            transition: all 0.2s ease;
+            border-radius: 11px;
+            font-weight: 750;
+            min-height: 43px;
+            transition: all 0.18s ease;
+            border: 1px solid #cfd9d5;
+            background: #f8faf9;
+            color: #344743;
         }
 
         div.stButton > button:hover {
             transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+            border-color: #9fb5af;
+            box-shadow: 0 5px 13px rgba(51, 65, 85, 0.08);
         }
 
         div.stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border: none;
+            background: #6f9189;
+            border: 1px solid #6f9189;
             color: white;
         }
 
+        div.stButton > button[kind="primary"]:hover {
+            background: #62837b;
+            border-color: #62837b;
+        }
+
         div[data-testid="stExpander"] {
-            border-radius: 14px;
-            border: 1px solid #dbe3ef;
-            background: rgba(255,255,255,0.78);
+            border-radius: 13px;
+            border: 1px solid #dce4e1;
+            background: #f9fbfa;
         }
 
         div[data-testid="stAlert"] {
-            border-radius: 14px;
+            border-radius: 13px;
         }
 
         .result-card {
-            background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
-            border: 1px solid #bbf7d0;
-            border-radius: 16px;
+            background: #eef5f1;
+            border: 1px solid #d2e2da;
+            border-radius: 15px;
             padding: 16px 18px;
             margin-bottom: 12px;
         }
 
         .result-word {
-            font-size: 28px;
-            font-weight: 900;
-            color: #166534;
-            letter-spacing: 1px;
+            font-size: 27px;
+            font-weight: 850;
+            color: #3f665c;
+            letter-spacing: 0.7px;
             margin-bottom: 4px;
         }
 
         .result-meta {
-            color: #475569;
+            color: #63736f;
             font-size: 14px;
             line-height: 1.6;
         }
@@ -168,8 +183,8 @@ st.markdown(
             align-items: center;
             justify-content: center;
             font-size: 10px;
-            font-weight: 800;
-            color: #64748b;
+            font-weight: 750;
+            color: #7b8985;
         }
 
         .row-coord {
@@ -179,57 +194,57 @@ st.markdown(
             align-items: center;
             justify-content: center;
             font-size: 10px;
-            font-weight: 800;
-            color: #64748b;
+            font-weight: 750;
+            color: #7b8985;
         }
 
         .cell {
             width: 31px;
             height: 31px;
             border-radius: 7px;
-            background: linear-gradient(145deg, #f8fafc, #e9eef5);
-            border: 1px solid #cbd5e1;
+            background: #edf1ef;
+            border: 1px solid #d2dad7;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 900;
+            font-weight: 850;
             font-size: 16px;
-            color: #5b3a2e;
+            color: #514a43;
             position: relative;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75);
         }
 
         .bonus-ghost {
             font-size: 9px;
-            color: #94a3b8;
-            opacity: 0.8;
-            font-weight: 900;
+            color: #9aa6a2;
+            opacity: 0.78;
+            font-weight: 850;
         }
 
         .center-star {
-            font-size: 16px;
-            color: #f59e0b;
-            opacity: 0.8;
-            font-weight: 900;
+            font-size: 15px;
+            color: #c4a668;
+            opacity: 0.85;
+            font-weight: 850;
         }
 
         .filled-old {
-            background: linear-gradient(145deg, #fde68a, #facc15);
-            border-color: #eab308;
-            color: #713f12;
-            box-shadow: 0 3px 7px rgba(202, 138, 4, 0.23);
+            background: #eadcae;
+            border-color: #d3c28e;
+            color: #5e5139;
+            box-shadow: 0 2px 5px rgba(117, 98, 55, 0.10);
         }
 
         .filled-new {
-            background: linear-gradient(145deg, #86efac, #4ade80);
-            border: 2px solid #16a34a;
-            color: #14532d;
-            box-shadow: 0 3px 9px rgba(22, 163, 74, 0.28);
+            background: #bcdcc8;
+            border: 2px solid #7fa88d;
+            color: #315143;
+            box-shadow: 0 2px 6px rgba(73, 113, 89, 0.14);
         }
 
         @media (max-width: 900px) {
             .hero-title {
-                font-size: 27px;
+                font-size: 26px;
             }
 
             .block-container {
