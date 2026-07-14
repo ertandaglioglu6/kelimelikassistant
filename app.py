@@ -395,6 +395,7 @@ def tahta_state_baslat():
         "arama_yapildi": False,
         "arama_tahtasi": None,
         "arama_suresi": 0,
+        "arama_hatasi": None,
         "bekleyen_tahta": None,
         "ekran_goruntusu_bytes": None,
         "ekran_goruntusu_kaynagi": None,
@@ -417,6 +418,7 @@ def sonuc_temizle():
     st.session_state.arama_yapildi = False
     st.session_state.arama_tahtasi = None
     st.session_state.arama_suresi = 0
+    st.session_state.arama_hatasi = None
 
 
 def tahtayi_kutulara_yaz(tahta):
@@ -530,6 +532,53 @@ def metinden_tahta_ve_harfler_olustur(tahta_metni):
         tahta.append(tahta_satiri)
 
     return tahta, eldeki_harfler
+
+
+
+def hamle_arama_yap():
+    st.session_state.arama_hatasi = None
+
+    try:
+        tahta = kutulardan_tahta_oku()
+
+        eldeki_harfler = str(
+            st.session_state.get("eldeki_harfler", "")
+        ).replace(" ", "")
+
+        temiz_harfler = turkce_buyuk_harf(eldeki_harfler)
+
+        if not temiz_harfler:
+            raise ValueError("Önce elindeki taşları gir kanka.")
+
+        for karakter in temiz_harfler:
+            if karakter != "*" and karakter not in TURKCE_HARFLER:
+                raise ValueError(
+                    f"Elindeki taşlarda geçersiz karakter var: {karakter}"
+                )
+
+        sozluk = sozluk_cache_yukle()
+
+        baslangic = time.time()
+        hamleler = hamleleri_bul(
+            tahta,
+            sozluk,
+            temiz_harfler,
+            puan_hesapla
+        )
+        bitis = time.time()
+
+        st.session_state.hamleler = hamleler or []
+        st.session_state.arama_yapildi = True
+        st.session_state.arama_tahtasi = tahta
+        st.session_state.arama_suresi = bitis - baslangic
+
+    except Exception as hata:
+        st.session_state.hamleler = []
+        st.session_state.arama_yapildi = False
+        st.session_state.arama_tahtasi = None
+        st.session_state.arama_suresi = 0
+        st.session_state.arama_hatasi = str(hata)
+
 
 
 def ekran_goruntusunu_kaydet(gorsel, kaynak):
@@ -856,47 +905,23 @@ with sag_kolon:
             unsafe_allow_html=True
         )
 
-        hamle_bul = st.button(
+        st.button(
             "🚀 EN SAĞLAM HAMLEYİ BUL",
             type="primary",
-            use_container_width=True
+            use_container_width=True,
+            on_click=hamle_arama_yap,
+            key="en_saglam_hamleyi_bul"
         )
 
-        if hamle_bul:
-            try:
-                tahta = kutulardan_tahta_oku()
-                temiz_harfler = turkce_buyuk_harf(
-                    eldeki_harfler.replace(" ", "")
-                )
-
-                if not temiz_harfler:
-                    raise ValueError("Önce elindeki taşları gir kanka.")
-
-                sozluk = sozluk_cache_yukle()
-
-                baslangic = time.time()
-                hamleler = hamleleri_bul(
-                    tahta,
-                    sozluk,
-                    temiz_harfler,
-                    puan_hesapla
-                )
-                bitis = time.time()
-
-                st.session_state.hamleler = hamleler
-                st.session_state.arama_yapildi = True
-                st.session_state.arama_tahtasi = tahta
-                st.session_state.arama_suresi = bitis - baslangic
-
-            except Exception as hata:
-                st.error(f"Hata: {hata}")
+        if st.session_state.arama_hatasi:
+            st.error(f"Hata: {st.session_state.arama_hatasi}")
 
     with st.container(border=True):
         st.markdown('<div class="eyebrow">Maç Sonucu</div>', unsafe_allow_html=True)
         st.markdown('<div class="section-title">Sana Önerdiğim Hamle</div>', unsafe_allow_html=True)
 
         if not st.session_state.arama_yapildi:
-            st.info("Maç Sonucu görmek için **En İyi Hamleyi Bul** butonuna bas.")
+            st.info("Hamleyi görmek için **En Sağlam Hamleyi Bul** butonuna bas.")
 
         elif not st.session_state.hamleler:
             st.warning("Bu elde uygun hamle çıkmadı kanka.")
