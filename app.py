@@ -6,8 +6,8 @@ from solver import hamleleri_bul, hamleyi_tahtada_goster
 from bonus import TAHTA_BONUSLARI
 
 
-YOUTUBE_LINK = "https://www.youtube.com/watch?v=GGtVmxTFJ2E&list=LL&index=72"
-GITHUB_LINK = "https://github.com/ertandaglioglu6/kelimelikassistant"
+YOUTUBE_LINK = "https://youtu.be/EUJmdhJiNBw?t=43"
+
 
 TURKCE_HARFLER = set("ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ")
 TAHTA_BOYUTU = 15
