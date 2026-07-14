@@ -24,19 +24,19 @@ st.markdown(
     """
     <style>
         :root {
-            --bg: #18201f;
-            --panel: #222c2a;
-            --panel-soft: #293432;
-            --border: #3a4744;
-            --text: #edf4f2;
-            --muted: #a9b8b4;
-            --accent: #77a89b;
-            --accent-strong: #8fc2b4;
-            --input: #111817;
-            --tile: #34403d;
-            --tile-border: #56635f;
-            --old: #d6c58f;
-            --new: #8fc7a7;
+            --bg: #061a33;
+            --panel: #0b2447;
+            --panel-soft: #12325b;
+            --border: #214a7a;
+            --text: #f7f9fc;
+            --muted: #b8c7da;
+            --accent: #f2c230;
+            --accent-strong: #ffd84d;
+            --input: #071426;
+            --tile: #17375e;
+            --tile-border: #315a8b;
+            --old: #f3d66b;
+            --new: #7fb3e6;
         }
 
         html, body, [class*="css"] {
@@ -45,8 +45,8 @@ st.markdown(
 
         .stApp {
             background:
-                radial-gradient(circle at top left, rgba(119, 168, 155, 0.12), transparent 28%),
-                radial-gradient(circle at top right, rgba(79, 113, 105, 0.10), transparent 24%),
+                radial-gradient(circle at top left, rgba(242, 194, 48, 0.10), transparent 28%),
+                radial-gradient(circle at top right, rgba(38, 94, 166, 0.16), transparent 24%),
                 var(--bg);
             color: var(--text);
         }
@@ -66,8 +66,8 @@ st.markdown(
         }
 
         .hero {
-            background: linear-gradient(135deg, #263331, #32423e);
-            border: 1px solid #40514d;
+            background: linear-gradient(135deg, #0a2143, #123a6b);
+            border: 1px solid #2b5688;
             border-radius: 22px;
             padding: 25px 28px;
             margin-bottom: 16px;
@@ -84,12 +84,12 @@ st.markdown(
 
         .hero-text {
             margin-top: 9px;
-            color: #b9c8c4;
+            color: #c7d4e5;
             font-size: 14px;
         }
 
         div[data-testid="stVerticalBlockBorderWrapper"] {
-            background: rgba(34, 44, 42, 0.96);
+            background: rgba(11, 36, 71, 0.97);
             border: 1px solid var(--border) !important;
             border-radius: 18px !important;
             box-shadow: 0 12px 28px rgba(0, 0, 0, 0.13);
@@ -100,7 +100,7 @@ st.markdown(
         }
 
         .eyebrow {
-            color: #8fa39e;
+            color: #f2c230;
             font-size: 11px;
             font-weight: 850;
             text-transform: uppercase;
@@ -124,7 +124,7 @@ st.markdown(
 
         div[data-testid="stTextInput"] label,
         div[data-testid="stTextArea"] label {
-            color: #d7e3df !important;
+            color: #eef4fb !important;
             font-weight: 750 !important;
         }
 
@@ -132,35 +132,35 @@ st.markdown(
         div[data-testid="stTextArea"] textarea {
             background: var(--input) !important;
             color: #f5fbf9 !important;
-            border: 1.5px solid #53645f !important;
+            border: 1.5px solid #315a8b !important;
             border-radius: 10px !important;
             box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
         }
 
         div[data-testid="stTextInput"] input::placeholder,
         div[data-testid="stTextArea"] textarea::placeholder {
-            color: #6f817c !important;
+            color: #7189a8 !important;
             opacity: 1 !important;
         }
 
         div[data-testid="stTextInput"] input:hover,
         div[data-testid="stTextArea"] textarea:hover {
-            border-color: #739087 !important;
+            border-color: #f2c230 !important;
         }
 
         div[data-testid="stTextInput"] input:focus,
         div[data-testid="stTextArea"] textarea:focus {
-            border-color: var(--accent-strong) !important;
-            box-shadow: 0 0 0 3px rgba(143, 194, 180, 0.14) !important;
+            border-color: #ffd84d !important;
+            box-shadow: 0 0 0 3px rgba(255, 216, 77, 0.14) !important;
         }
 
         div.stButton > button,
         a[data-testid="stLinkButton"] {
             min-height: 44px;
             border-radius: 11px !important;
-            border: 1px solid #55635f !important;
-            background: #2b3634 !important;
-            color: #e9f1ef !important;
+            border: 1px solid #315a8b !important;
+            background: #102b50 !important;
+            color: #f5f8fc !important;
             font-weight: 800 !important;
             transition: 0.18s ease;
         }
@@ -168,26 +168,26 @@ st.markdown(
         div.stButton > button:hover,
         a[data-testid="stLinkButton"]:hover {
             transform: translateY(-1px);
-            border-color: #78928b !important;
-            background: #34413e !important;
+            border-color: #f2c230 !important;
+            background: #173e70 !important;
             box-shadow: 0 8px 18px rgba(0,0,0,.14);
         }
 
         div.stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #6e9f92, #82b3a6) !important;
-            border-color: #8ab9ad !important;
-            color: #10201c !important;
+            background: linear-gradient(135deg, #f2c230, #ffd84d) !important;
+            border-color: #ffd84d !important;
+            color: #0a2143 !important;
             min-height: 50px;
             font-size: 16px;
         }
 
         div.stButton > button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #7daf9f, #91c4b6) !important;
+            background: linear-gradient(135deg, #ffd84d, #ffe77f) !important;
         }
 
         div[data-testid="stExpander"] {
-            background: #1e2826;
-            border: 1px solid #3d4b47;
+            background: #0c2342;
+            border: 1px solid #2b5688;
             border-radius: 12px;
         }
 
@@ -196,22 +196,22 @@ st.markdown(
         }
 
         .result-box {
-            background: #23342f;
-            border: 1px solid #3e6258;
+            background: #102b50;
+            border: 1px solid #2f67a3;
             border-radius: 14px;
             padding: 16px 17px;
             margin-bottom: 12px;
         }
 
         .result-word {
-            color: #a9d7c3;
+            color: #ffd84d;
             font-size: 29px;
             font-weight: 900;
             letter-spacing: 1px;
         }
 
         .result-meta {
-            color: #b7c6c2;
+            color: #c9d7e7;
             font-size: 13px;
             line-height: 1.7;
             margin-top: 4px;
@@ -236,7 +236,7 @@ st.markdown(
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #90a29d;
+            color: #9fb3ca;
             font-size: 10px;
             font-weight: 800;
         }
@@ -247,7 +247,7 @@ st.markdown(
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #90a29d;
+            color: #9fb3ca;
             font-size: 10px;
             font-weight: 800;
         }
@@ -256,8 +256,8 @@ st.markdown(
             width: 31px;
             height: 31px;
             border-radius: 7px;
-            background: var(--tile);
-            border: 1px solid var(--tile-border);
+            background: #17375e;
+            border: 1px solid #315a8b;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -268,27 +268,27 @@ st.markdown(
         }
 
         .bonus-ghost {
-            color: #859590;
+            color: #8ea8c4;
             font-size: 9px;
             font-weight: 900;
         }
 
         .center-star {
-            color: #c2ae73;
+            color: #ffd84d;
             font-size: 15px;
             font-weight: 900;
         }
 
         .filled-old {
             background: var(--old);
-            border-color: #b6a675;
-            color: #4f452c;
+            border-color: #d5b22b;
+            color: #3b2f00;
         }
 
         .filled-new {
             background: var(--new);
-            border: 2px solid #659b7b;
-            color: #1f4634;
+            border: 2px solid #2f6fa8;
+            color: #0b2d4f;
         }
 
         .board-input div[data-testid="stTextInput"] input {
@@ -297,13 +297,13 @@ st.markdown(
             font-size: 16px !important;
             padding: 0 !important;
             height: 38px !important;
-            background: #111817 !important;
-            border: 1.5px solid #5c6b67 !important;
+            background: #071426 !important;
+            border: 1.5px solid #315a8b !important;
         }
 
         .board-input div[data-testid="stTextInput"] input:focus {
-            border-color: #9acbbb !important;
-            box-shadow: 0 0 0 2px rgba(154,203,187,.16) !important;
+            border-color: #ffd84d !important;
+            box-shadow: 0 0 0 2px rgba(255,216,77,.16) !important;
         }
 
         @media (max-width: 900px) {
@@ -518,9 +518,9 @@ bekleyen_tahtayi_uygula()
 st.markdown(
     """
     <div class="hero">
-        <div class="hero-title">🧩 EN İYİ HAMLENİ GÖR</div>
+        <div class="hero-title">💛💙 EN İYİ HAMLENİ BUL</div>
         <div class="hero-text">
-            Tahtayı doldur, elindeki harfleri gir ve en yüksek puanlı hamleyi bul.
+            Tahtayı kur kanka, harflerini gir; en sağlam hamleyi beraber bulalım.
         </div>
     </div>
     """,
@@ -529,22 +529,22 @@ st.markdown(
 
 
 with st.container(border=True):
-    st.markdown('<div class="eyebrow">Hızlı Kontroller</div>', unsafe_allow_html=True)
+    st.markdown('<div class="eyebrow">Maç Öncesi Hazırlık</div>', unsafe_allow_html=True)
 
     kontrol1, kontrol2, kontrol3 = st.columns([1, 2.4, 1])
 
     with kontrol1:
-        if st.button("🧹 Tahtayı Temizle", use_container_width=True):
+        if st.button("🧹 Tahtayı Sıfırla", use_container_width=True):
             st.session_state.bekleyen_tahta = bos_tahta_olustur()
             sonuc_temizle()
             st.rerun()
 
     with kontrol2:
         eldeki_harfler = st.text_input(
-            "Elindeki harfler",
+            "Elindeki taşlar",
             value="",
-            placeholder="Örnek: ÇJÜLLK veya ABCD*EF",
-            help="Joker için * kullan."
+            placeholder="Mesela: ÇJÜLLK ya da ABCD*EF",
+            help="Joker varsa * koy kanka."
         )
 
     with kontrol3:
@@ -560,16 +560,16 @@ sol_kolon, sag_kolon = st.columns([1.55, 1], gap="large")
 
 with sol_kolon:
     with st.container(border=True):
-        st.markdown('<div class="eyebrow">Tahta Girişi</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Tahtayı Düzenle</div>', unsafe_allow_html=True)
+        st.markdown('<div class="eyebrow">Saha Kurulumu</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Tahtayı Kur</div>', unsafe_allow_html=True)
         st.markdown(
             '<div class="section-help">'
-            'Kutulara tek tek harf girebilir veya toplu tahta metnini yapıştırabilirsin.'
+            'İstersen tek tek gir, istersen 15x15 tahtayı topluca yapıştır kanka.'
             '</div>',
             unsafe_allow_html=True
         )
 
-        with st.expander("📋 Toplu Tahta Girişi", expanded=False):
+        with st.expander("📋 Toplu Saha Kurulumu", expanded=False):
             st.caption(
                 "15 satır ve her satırda 15 karakter olmalı. "
                 "Boş kare için nokta (.) kullan."
@@ -582,7 +582,7 @@ with sol_kolon:
                 placeholder="\n".join(["." * 15 for _ in range(15)])
             )
 
-            if st.button("📥 Metni Tahtaya Uygula", use_container_width=True):
+            if st.button("📥 Tahtaya Aktar", use_container_width=True):
                 try:
                     yeni_tahta = metinden_tahta_olustur(toplu_tahta_metni)
                     st.session_state.bekleyen_tahta = yeni_tahta
@@ -658,11 +658,11 @@ with sol_kolon:
 
 with sag_kolon:
     with st.container(border=True):
-        st.markdown('<div class="eyebrow">Canlı Görünüm</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Tahta Önizleme</div>', unsafe_allow_html=True)
+        st.markdown('<div class="eyebrow">Anlık Görünüm</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Tahtanın Son Hali</div>', unsafe_allow_html=True)
         st.markdown(
             '<div class="section-help">'
-            'Girdiğin harfler burada anlık olarak görünür.'
+            'Yazdığın her harf burada anında görünür kanka.'
             '</div>',
             unsafe_allow_html=True
         )
@@ -677,16 +677,16 @@ with sag_kolon:
 
     with st.container(border=True):
         st.markdown('<div class="eyebrow">Hamle Motoru</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Hamleyi Hesapla</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Hazırsan Başlayalım</div>', unsafe_allow_html=True)
         st.markdown(
             '<div class="section-help">'
-            'Tahta hazırsa ve harflerini girdiysen aşağıdaki butona bas.'
+            'Tahta tamamsa ve taşlarını girdiysen bas düğmeye, gerisini bize bırak.'
             '</div>',
             unsafe_allow_html=True
         )
 
         hamle_bul = st.button(
-            "🚀 EN İYİ HAMLEYİ BUL",
+            "🚀 EN SAĞLAM HAMLEYİ BUL",
             type="primary",
             use_container_width=True
         )
@@ -699,7 +699,7 @@ with sag_kolon:
                 )
 
                 if not temiz_harfler:
-                    raise ValueError("Önce elindeki harfleri gir.")
+                    raise ValueError("Önce elindeki taşları gir kanka.")
 
                 sozluk = sozluk_cache_yukle()
 
@@ -721,14 +721,14 @@ with sag_kolon:
                 st.error(f"Hata: {hata}")
 
     with st.container(border=True):
-        st.markdown('<div class="eyebrow">Sonuç</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Önerilen Hamle</div>', unsafe_allow_html=True)
+        st.markdown('<div class="eyebrow">Maç Sonucu</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Sana Önerdiğim Hamle</div>', unsafe_allow_html=True)
 
         if not st.session_state.arama_yapildi:
-            st.info("Sonuç görmek için **En İyi Hamleyi Bul** butonuna bas.")
+            st.info("Maç Sonucu görmek için **En İyi Hamleyi Bul** butonuna bas.")
 
         elif not st.session_state.hamleler:
-            st.warning("Uygun hamle bulunamadı.")
+            st.warning("Bu elde uygun hamle çıkmadı kanka.")
 
         else:
             hamleler = st.session_state.hamleler
@@ -751,11 +751,11 @@ with sag_kolon:
                 unsafe_allow_html=True
             )
 
-            st.caption("Yeşil kareler yeni koyulacak harfleri gösterir.")
+            st.caption("Mavi kareler yeni koyacağın harfleri gösteriyor kanka.")
             tahta_yazdir_web(yeni_tahta, orijinal_tahta=tahta)
 
             if st.button(
-                "✅ En İyi Hamleyi Tabloya İşle",
+                "✅ Bu Hamleyi Tahtaya İşle",
                 type="primary",
                 use_container_width=True
             ):
@@ -763,7 +763,7 @@ with sag_kolon:
                 sonuc_temizle()
                 st.rerun()
 
-            with st.expander("İlk 20 Hamleyi Göster"):
+            with st.expander("Diğer Güzel Hamleleri Göster"):
                 for index, hamle in enumerate(hamleler[:20], start=1):
                     st.write(
                         f"**{index}. {hamle['kelime']}** — "
