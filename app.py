@@ -6,7 +6,8 @@ from solver import hamleleri_bul, hamleyi_tahtada_goster
 from bonus import TAHTA_BONUSLARI
 
 
-YOUTUBE_LINK = "https://youtu.be/EUJmdhJiNBw?t=40"
+YOUTUBE_LINK = "https://www.youtube.com/watch?v=GGtVmxTFJ2E&list=LL&index=72"
+GITHUB_LINK = "https://github.com/ertandaglioglu6/kelimelikassistant"
 
 TURKCE_HARFLER = set("ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ")
 TAHTA_BOYUTU = 15
@@ -86,6 +87,32 @@ st.markdown(
             margin-top: 9px;
             color: #c7d4e5;
             font-size: 14px;
+        }
+
+        .brand-box {
+            background: linear-gradient(135deg, #0d2b54, #123f78);
+            border: 1px solid #2f5e95;
+            border-radius: 14px;
+            padding: 10px 13px;
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .brand-name {
+            color: #ffd84d;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: .08em;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: #b8c9df;
+            font-size: 10px;
+            margin-top: 4px;
+            letter-spacing: .04em;
         }
 
         div[data-testid="stVerticalBlockBorderWrapper"] {
@@ -548,11 +575,31 @@ with st.container(border=True):
         )
 
     with kontrol3:
-        st.link_button(
-            "⚡ ERTOLAND6",
-            YOUTUBE_LINK,
-            use_container_width=True
+        st.markdown(
+            """
+            <div class="brand-box">
+                <div class="brand-name">⚡ ERTOLAND6</div>
+                <div class="brand-subtitle">KELİMELİK ASSISTANT</div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
+
+        sosyal1, sosyal2 = st.columns(2)
+
+        with sosyal1:
+            st.link_button(
+                "▶ YouTube",
+                YOUTUBE_LINK,
+                use_container_width=True
+            )
+
+        with sosyal2:
+            st.link_button(
+                "⌘ GitHub",
+                GITHUB_LINK,
+                use_container_width=True
+            )
 
 
 sol_kolon, sag_kolon = st.columns([1.55, 1], gap="large")
