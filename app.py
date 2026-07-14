@@ -8,7 +8,6 @@ from bonus import TAHTA_BONUSLARI
 
 YOUTUBE_LINK = "https://youtu.be/EUJmdhJiNBw?t=43"
 
-
 TURKCE_HARFLER = set("ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ")
 TAHTA_BOYUTU = 15
 
@@ -585,21 +584,11 @@ with st.container(border=True):
             unsafe_allow_html=True
         )
 
-        sosyal1, sosyal2 = st.columns(2)
-
-        with sosyal1:
-            st.link_button(
-                "▶ YouTube",
-                YOUTUBE_LINK,
-                use_container_width=True
-            )
-
-        with sosyal2:
-            st.link_button(
-                "⌘ GitHub",
-                GITHUB_LINK,
-                use_container_width=True
-            )
+        st.link_button(
+            "▶ YouTube",
+            YOUTUBE_LINK,
+            use_container_width=True
+        )
 
 
 sol_kolon, sag_kolon = st.columns([1.55, 1], gap="large")
