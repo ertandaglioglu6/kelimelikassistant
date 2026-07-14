@@ -114,6 +114,58 @@ def kutulardan_tahta_oku():
     return tahta
 
 
+def metinden_tahta_olustur(tahta_metni):
+    satirlar = []
+
+    for satir in tahta_metni.splitlines():
+        temiz_satir = satir.strip()
+
+        if temiz_satir == "":
+            continue
+
+        temiz_satir = temiz_satir.replace(" ", "")
+        temiz_satir = temiz_satir.replace("\t", "")
+        temiz_satir = temiz_satir.replace("-", ".")
+        temiz_satir = temiz_satir.replace("_", ".")
+        temiz_satir = temiz_satir.replace("·", ".")
+        temiz_satir = temiz_satir.replace("*", ".")
+        temiz_satir = temiz_satir.replace("★", ".")
+        temiz_satir = turkce_buyuk_harf(temiz_satir)
+
+        satirlar.append(temiz_satir)
+
+    if len(satirlar) != TAHTA_BOYUTU:
+        raise ValueError(
+            f"Tahta tam 15 satır olmalı. Şu an {len(satirlar)} satır var."
+        )
+
+    tahta = []
+
+    for satir_no, satir in enumerate(satirlar):
+        if len(satir) != TAHTA_BOYUTU:
+            raise ValueError(
+                f"{satir_no}. satır tam 15 karakter olmalı. Şu an {len(satir)} karakter var."
+            )
+
+        tahta_satiri = []
+
+        for sutun_no, karakter in enumerate(satir):
+            if karakter == ".":
+                tahta_satiri.append(".")
+                continue
+
+            if karakter not in TURKCE_HARFLER:
+                raise ValueError(
+                    f"{satir_no}. satır {sutun_no}. sütunda geçersiz karakter var: {karakter}"
+                )
+
+            tahta_satiri.append(karakter)
+
+        tahta.append(tahta_satiri)
+
+    return tahta
+
+
 def bonus_yazisi(satir, sutun):
     if satir == 7 and sutun == 7:
         return "★"
@@ -285,6 +337,41 @@ col1, col2 = st.columns([1.45, 1])
 with col1:
     st.subheader("1) Tahtayı Düzenle")
     st.caption("Üstte sütun, solda satır numarası var. H2/H3/K2/K3 yazıları bonus kareleri silik gösterir. Orta kare yıldızdır.")
+
+    with st.expander("📋 Toplu Tahta Girişi", expanded=False):
+        st.caption("15 satır yaz. Her satır 15 karakter olsun. Boş kare için nokta kullan: .")
+
+        toplu_tahta_metni = st.text_area(
+            "Tahtayı buraya yapıştır",
+            value="",
+            height=260,
+            placeholder=(
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "...............\n"
+                "..............."
+            )
+        )
+
+        if st.button("Toplu Tahtayı Uygula", use_container_width=True):
+            try:
+                yeni_tahta = metinden_tahta_olustur(toplu_tahta_metni)
+                st.session_state.bekleyen_tahta = yeni_tahta
+                sonuc_temizle()
+                st.rerun()
+            except Exception as hata:
+                st.error(f"Hata: {hata}")
 
     baslik_kolonlari = st.columns([0.45] + [1 for _ in range(TAHTA_BOYUTU)])
 
