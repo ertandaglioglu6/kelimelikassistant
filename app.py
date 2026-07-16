@@ -5,6 +5,8 @@ import streamlit as st
 from main import sozluk_yukle, turkce_buyuk_harf, puan_hesapla
 from solver import hamleleri_bul, hamleyi_tahtada_goster
 from bonus import TAHTA_BONUSLARI
+from vision import tahtayi_bul_ve_duzelt, grid_overlay_olustur
+from ocr_engine import tahtayi_oku
 
 
 YOUTUBE_LINK = "https://youtu.be/EUJmdhJiNBw?t=43"
@@ -399,6 +401,11 @@ def tahta_state_baslat():
         "bekleyen_tahta": None,
         "ekran_goruntusu_bytes": None,
         "ekran_goruntusu_kaynagi": None,
+        "kesilmis_tahta_bytes": None,
+        "grid_overlay_bytes": None,
+        "vision_hatasi": None,
+        "ocr_hatasi": None,
+        "ocr_bilgisi": None,
         "eldeki_harfler": "",
     }
 
@@ -599,6 +606,127 @@ def ekran_goruntusunu_kaydet(gorsel, kaynak):
 def ekran_goruntusunu_temizle():
     st.session_state.ekran_goruntusu_bytes = None
     st.session_state.ekran_goruntusu_kaynagi = None
+    st.session_state.kesilmis_tahta_bytes = None
+    st.session_state.grid_overlay_bytes = None
+    st.session_state.vision_hatasi = None
+    st.session_state.ocr_hatasi = None
+    st.session_state.ocr_bilgisi = None
+
+
+
+
+def gorseli_tabloya_aktar():
+    """
+    Yüklenen ekran görüntüsünde tahtayı bulur, perspektifi düzeltir,
+    harfleri okur ve 15x15 giriş kutularına aktarır.
+    """
+    st.session_state.vision_hatasi = None
+    st.session_state.ocr_hatasi = None
+    st.session_state.ocr_bilgisi = None
+    st.session_state.kesilmis_tahta_bytes = None
+    st.session_state.grid_overlay_bytes = None
+
+    try:
+        if st.session_state.ekran_goruntusu_bytes is None:
+            raise ValueError("Önce bir ekran görüntüsü yükle kanka.")
+
+        tahta_png = tahtayi_bul_ve_duzelt(
+            st.session_state.ekran_goruntusu_bytes
+        )
+
+        st.session_state.kesilmis_tahta_bytes = tahta_png
+        st.session_state.grid_overlay_bytes = grid_overlay_olustur(
+            tahta_png,
+            boyut=TAHTA_BOYUTU
+        )
+
+        sonuc = tahtayi_oku(
+            tahta_png,
+            boyut=TAHTA_BOYUTU
+        )
+
+        okunan_tahta = sonuc["tahta"]
+
+        if sonuc["okunan_harf_sayisi"] == 0:
+            raise ValueError(
+                "Tahta bulundu fakat hiç harf okunamadı. "
+                "Ekran görüntüsünde tahtanın tamamının görünmesine dikkat et."
+            )
+
+        # Widgetlar bu çalışma turunda zaten oluşturulmuş olabileceği için
+        # doğrudan kutulara yazmak yerine bir sonraki turda uygulanacak tahtayı sakla.
+        st.session_state.bekleyen_tahta = okunan_tahta
+        st.session_state.ocr_bilgisi = (
+            f"{sonuc['tespit_edilen_tas_sayisi']} taş tespit edildi · "
+            f"{sonuc['okunan_harf_sayisi']} harf okundu · "
+            f"ortalama güven %{sonuc['ortalama_guven'] * 100:.0f}"
+        )
+
+        sonuc_temizle()
+        st.rerun()
+
+    except Exception as hata:
+        st.session_state.ocr_hatasi = str(hata)
+
+
+def yuklenen_gorselden_tahtayi_bul():
+    st.session_state.vision_hatasi = None
+    st.session_state.ocr_hatasi = None
+    st.session_state.ocr_bilgisi = None
+    st.session_state.kesilmis_tahta_bytes = None
+
+    try:
+        if st.session_state.ekran_goruntusu_bytes is None:
+            raise ValueError("Önce bir ekran görüntüsü yükle kanka.")
+
+        tahta_png = tahtayi_bul_ve_duzelt(
+            st.session_state.ekran_goruntusu_bytes
+        )
+
+        st.session_state.kesilmis_tahta_bytes = tahta_png
+        st.session_state.grid_overlay_bytes = grid_overlay_olustur(
+            tahta_png,
+            boyut=TAHTA_BOYUTU
+        )
+
+    except Exception as hata:
+        st.session_state.vision_hatasi = str(hata)
+
+
+
+
+def kesilmis_tahtayi_oku_ve_uygula():
+    st.session_state.ocr_hatasi = None
+    st.session_state.ocr_bilgisi = None
+
+    try:
+        if st.session_state.kesilmis_tahta_bytes is None:
+            raise ValueError("Önce Tahtayı Otomatik Bul butonuna bas kanka.")
+
+        sonuc = tahtayi_oku(
+            st.session_state.kesilmis_tahta_bytes,
+            boyut=TAHTA_BOYUTU
+        )
+
+        okunan_tahta = sonuc["tahta"]
+
+        if sonuc["okunan_harf_sayisi"] == 0:
+            raise ValueError(
+                "Hiç harf okunamadı. Tahta kesimi yanlış olabilir."
+            )
+
+        st.session_state.bekleyen_tahta = okunan_tahta
+        st.session_state.ocr_bilgisi = (
+            f"{sonuc['okunan_harf_sayisi']} harf okundu · "
+            f"ortalama güven %{sonuc['ortalama_guven'] * 100:.0f}"
+        )
+
+        sonuc_temizle()
+        st.rerun()
+
+    except Exception as hata:
+        st.session_state.ocr_hatasi = str(hata)
+
 
 
 def bonus_yazisi(satir, sutun):
@@ -824,10 +952,10 @@ with sol_kolon:
 with sag_kolon:
     with st.container(border=True):
         st.markdown('<div class="eyebrow">Ekran Görüntüsü</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">Görseli Ekle</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Görseli Tabloya Aktar</div>', unsafe_allow_html=True)
         st.markdown(
             '<div class="section-help">'
-            'Bilgisayarından ekran görüntüsünü seçip yükleyebilirsin.'
+            'Ekran görüntüsünü yükle, tek tuşla tahtayı bulup harfleri kutulara aktaralım.'
             '</div>',
             unsafe_allow_html=True
         )
@@ -836,7 +964,7 @@ with sag_kolon:
             """
             <div class="image-note">
                 Windows: <b>Win + Shift + S</b> ile ekran görüntüsünü al.<br>
-                Ardından görseli kaydedip aşağıdaki alandan seç.
+                Tahtanın tamamı ve kenarları mümkün olduğunca net görünsün.
             </div>
             """,
             unsafe_allow_html=True
@@ -846,26 +974,76 @@ with sag_kolon:
             "Dosyadan ekran görüntüsü seç",
             type=["png", "jpg", "jpeg", "webp"],
             accept_multiple_files=False,
-            help="PNG, JPG, JPEG veya WEBP yükleyebilirsin."
+            help="PNG, JPG, JPEG veya WEBP yükleyebilirsin.",
+            key="tahta_gorseli_yukleyici"
         )
 
         if dosyadan_gorsel is not None:
-            ekran_goruntusunu_kaydet(dosyadan_gorsel, "Dosyadan seçildi")
+            yeni_gorsel_bytes = dosyadan_gorsel.getvalue()
 
-        st.caption(
-            "Şimdilik görseli dosyadan seç. "
-            "Ctrl+V ile doğrudan yapıştırmayı sonraki adımda daha sağlam şekilde ekleyeceğiz."
-        )
+            # Aynı dosya her yeniden çizimde gereksiz yere state'i sıfırlamasın.
+            if yeni_gorsel_bytes != st.session_state.ekran_goruntusu_bytes:
+                ekran_goruntusunu_kaydet(
+                    dosyadan_gorsel,
+                    "Dosyadan seçildi"
+                )
+                st.session_state.kesilmis_tahta_bytes = None
+                st.session_state.grid_overlay_bytes = None
+                st.session_state.vision_hatasi = None
+                st.session_state.ocr_hatasi = None
+                st.session_state.ocr_bilgisi = None
 
         if st.session_state.ekran_goruntusu_bytes is not None:
             st.success(
                 f"Görsel hazır: {st.session_state.ekran_goruntusu_kaynagi}"
             )
+
             st.image(
                 st.session_state.ekran_goruntusu_bytes,
-                caption="OCR için kullanılacak ekran görüntüsü",
+                caption="Yüklenen ekran görüntüsü",
                 use_container_width=True
             )
+
+            st.button(
+                "📷 GÖRSELİ TABLOYA AKTAR",
+                type="primary",
+                use_container_width=True,
+                on_click=gorseli_tabloya_aktar,
+                key="gorseli_tabloya_aktar_butonu"
+            )
+
+            if st.session_state.vision_hatasi:
+                st.error(
+                    f"Tahta bulunamadı: {st.session_state.vision_hatasi}"
+                )
+
+            if st.session_state.ocr_hatasi:
+                st.error(
+                    f"Görsel tabloya aktarılamadı: {st.session_state.ocr_hatasi}"
+                )
+
+            if st.session_state.ocr_bilgisi:
+                st.success(
+                    f"Tablo dolduruldu: {st.session_state.ocr_bilgisi}"
+                )
+
+            if st.session_state.kesilmis_tahta_bytes is not None:
+                with st.expander("🔎 Bulunan tahtayı kontrol et", expanded=False):
+                    st.image(
+                        st.session_state.kesilmis_tahta_bytes,
+                        caption="Bulunan ve düzeltilen tahta",
+                        use_container_width=True
+                    )
+
+                    if st.session_state.grid_overlay_bytes is not None:
+                        st.image(
+                            st.session_state.grid_overlay_bytes,
+                            caption=(
+                                "15×15 hücre kontrolü — kırmızı çizgiler "
+                                "taşların sınırlarına oturmalı"
+                            ),
+                            use_container_width=True
+                        )
 
             if st.button(
                 "🗑️ Görseli Kaldır",
@@ -875,7 +1053,10 @@ with sag_kolon:
                 ekran_goruntusunu_temizle()
                 st.rerun()
         else:
-            st.info("Henüz bir ekran görüntüsü eklenmedi.")
+            st.info(
+                "Bir ekran görüntüsü yüklediğinde "
+                "“Görseli Tabloya Aktar” butonu burada çıkacak."
+            )
 
     with st.container(border=True):
         st.markdown('<div class="eyebrow">Anlık Görünüm</div>', unsafe_allow_html=True)
