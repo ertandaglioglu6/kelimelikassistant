@@ -59,19 +59,27 @@ def _tas_var_mi(hucre):
         medyan = np.median(yama.reshape(-1, 3), axis=0)
         renk, doygunluk, parlaklik = medyan
 
+        # Merkez yıldız karesi taş sarısına yakın görünür.
+        # Yıldız karesinin doygunluğu yüksektir; normal sarı taşlardan ayır.
+        yildiz_rengi = (
+            16 <= renk <= 21
+            and doygunluk >= 145
+            and parlaklik >= 240
+        )
+
         sari_tas = (
-            18 <= renk <= 32
-            and 65 <= doygunluk <= 180
-            and parlaklik >= 185
+            19 <= renk <= 30
+            and 80 <= doygunluk <= 140
+            and parlaklik >= 220
         )
 
         turuncu_tas = (
-            5 <= renk <= 18
-            and doygunluk >= 150
-            and parlaklik >= 150
+            8 <= renk <= 16
+            and doygunluk >= 190
+            and parlaklik >= 180
         )
 
-        if sari_tas or turuncu_tas:
+        if not yildiz_rengi and (sari_tas or turuncu_tas):
             uygun_kose += 1
 
     return uygun_kose >= 3
@@ -258,7 +266,7 @@ def tahtayi_oku(kesilmis_tahta_bytes, boyut=15):
             "Taş rengi algılanamadı. Yüklediğin ekran görüntüsünü kırpmadan tekrar dene."
         )
 
-    if tespit_edilen_tas_sayisi > 55:
+    if tespit_edilen_tas_sayisi > 110:
         raise ValueError(
             f"{tespit_edilen_tas_sayisi} taş tespit edildi. "
             "Bonus kareleri taş sanılmış olabilir."
