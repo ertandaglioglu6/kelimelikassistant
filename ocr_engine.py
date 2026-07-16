@@ -26,117 +26,80 @@ def _png_bytes_to_bgr(gorsel_bytes):
     gorsel = cv2.imdecode(veri, cv2.IMREAD_COLOR)
 
     if gorsel is None:
-        raise ValueError("Kesilmiş tahta görüntüsü okunamadı.")
+        raise ValueError("Tahta görüntüsü okunamadı.")
 
     return gorsel
 
 
-def _sari_turuncu_piksel_mi(hsv_piksel):
-    h, s, v = [int(deger) for deger in hsv_piksel]
-
-    # Gerçek taşların sarı/krem/turuncu arka plan aralığı.
-    renk_uygun = 4 <= h <= 40
-    doygunluk_uygun = 45 <= s <= 255
-    parlaklik_uygun = v >= 105
-
-    return renk_uygun and doygunluk_uygun and parlaklik_uygun
-
-
 def _tas_rengi_var_mi(hucre):
     """
-    Hücrenin farklı bölgelerinde taşın sarı/turuncu zeminini arar.
+    Kelimelik taşlarının iki ana rengini kabul eder:
+    - Açık sarı taş
+    - Turuncu son oynanan taş
 
-    Tek başına yeterli değildir. K3 gibi renkli bonus kareleri de benzer
-    renkte olabileceği için ayrıca büyük harf kontrolü yapılır.
+    H2, H3, K2 ve K3 bonus renklerini reddeder.
     """
     h, w = hucre.shape[:2]
 
     if h < 10 or w < 10:
         return False
 
-    hsv = cv2.cvtColor(hucre, cv2.COLOR_BGR2HSV)
-
-    noktalar = [
-        (0.20, 0.20),
-        (0.40, 0.18),
-        (0.60, 0.18),
-        (0.80, 0.20),
-
-        (0.18, 0.40),
-        (0.82, 0.42),
-
-        (0.18, 0.62),
-        (0.82, 0.64),
-
-        (0.20, 0.80),
-        (0.40, 0.82),
-        (0.60, 0.82),
-        (0.80, 0.80),
+    ic = hucre[
+        int(h * 0.18):int(h * 0.82),
+        int(w * 0.18):int(w * 0.82)
     ]
 
-    uygun_nokta = 0
+    if ic.size == 0:
+        return False
 
-    for x_oran, y_oran in noktalar:
-        x = min(max(int(w * x_oran), 0), w - 1)
-        y = min(max(int(h * y_oran), 0), h - 1)
+    hsv = cv2.cvtColor(ic, cv2.COLOR_BGR2HSV)
 
-        yaricap = max(int(min(h, w) * 0.035), 1)
+    medyan = np.median(
+        hsv.reshape(-1, 3),
+        axis=0
+    )
 
-        x1 = max(x - yaricap, 0)
-        x2 = min(x + yaricap + 1, w)
-        y1 = max(y - yaricap, 0)
-        y2 = min(y + yaricap + 1, h)
+    renk_h, doygunluk, parlaklik = medyan
 
-        yama = hsv[y1:y2, x1:x2]
+    acik_sari_tas = (
+        19 <= renk_h <= 28
+        and 85 <= doygunluk <= 155
+        and parlaklik >= 210
+    )
 
-        if yama.size == 0:
-            continue
+    turuncu_tas = (
+        8 <= renk_h <= 18
+        and doygunluk >= 175
+        and parlaklik >= 150
+    )
 
-        medyan = np.median(
-            yama.reshape(-1, 3),
-            axis=0
-        )
-
-        if _sari_turuncu_piksel_mi(medyan):
-            uygun_nokta += 1
-
-    # On iki noktanın en az yedisi taş renginde olmalı.
-    return uygun_nokta >= 7
+    return bool(acik_sari_tas or turuncu_tas)
 
 
-def _buyuk_harf_sekli_var_mi(hucre):
+def _buyuk_harf_var_mi(hucre):
     """
-    Hücrenin ortasında gerçek oyun taşı üzerindeki harf kadar büyük,
-    koyu renkli bir şekil olup olmadığını kontrol eder.
-
-    H2/K2/H3/K3 yazıları daha küçük olduğu için büyük ölçüde elenir.
+    Taşın ortasında büyük ve koyu bir harf bulunmasını şart koşar.
+    Bonus karelerindeki küçük H2/K2/H3/K3 yazılarını eler.
     """
     h, w = hucre.shape[:2]
 
-    if h < 10 or w < 10:
+    bolge = hucre[
+        int(h * 0.12):int(h * 0.88),
+        int(w * 0.10):int(w * 0.79)
+    ]
+
+    if bolge.size == 0:
         return False
 
-    # Izgara çizgilerini, taş kenarlarını ve sağ üstteki puan rakamını çıkar.
-    y1 = int(h * 0.14)
-    y2 = int(h * 0.86)
-    x1 = int(w * 0.13)
-    x2 = int(w * 0.78)
-
-    merkez = hucre[y1:y2, x1:x2]
-
-    if merkez.size == 0:
-        return False
-
-    merkez = cv2.resize(
-        merkez,
-        (260, 300),
+    bolge = cv2.resize(
+        bolge,
+        (280, 320),
         interpolation=cv2.INTER_CUBIC
     )
 
-    gri = cv2.cvtColor(merkez, cv2.COLOR_BGR2GRAY)
+    gri = cv2.cvtColor(bolge, cv2.COLOR_BGR2GRAY)
     gri = cv2.GaussianBlur(gri, (3, 3), 0)
 
-    # Koyu harfi açık taş zemininden ayır.
     _, ikili = cv2.threshold(
         gri,
         0,
@@ -144,16 +107,10 @@ def _buyuk_harf_sekli_var_mi(hucre):
         cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
     )
 
-    # Küçük yazı ve görüntü gürültülerini azalt.
-    cekirdek = cv2.getStructuringElement(
-        cv2.MORPH_ELLIPSE,
-        (3, 3)
-    )
-
     ikili = cv2.morphologyEx(
         ikili,
         cv2.MORPH_OPEN,
-        cekirdek,
+        np.ones((3, 3), np.uint8),
         iterations=1
     )
 
@@ -164,124 +121,80 @@ def _buyuk_harf_sekli_var_mi(hucre):
     )
 
     goruntu_h, goruntu_w = ikili.shape
-    goruntu_alani = goruntu_h * goruntu_w
+    toplam_alan = goruntu_h * goruntu_w
 
     for kontur in konturlar:
         alan = cv2.contourArea(kontur)
         x, y, genislik, yukseklik = cv2.boundingRect(kontur)
 
-        alan_orani = alan / float(goruntu_alani)
+        # Çerçeve veya hücre kenarı olabilecek şekilleri alma.
+        kenara_deger = (
+            x <= 3
+            or y <= 3
+            or x + genislik >= goruntu_w - 3
+            or y + yukseklik >= goruntu_h - 3
+        )
+
+        if kenara_deger:
+            continue
+
         yukseklik_orani = yukseklik / float(goruntu_h)
         genislik_orani = genislik / float(goruntu_w)
+        alan_orani = alan / float(toplam_alan)
 
         merkez_x = x + genislik / 2
         merkez_y = y + yukseklik / 2
 
-        yatay_merkezde = (
-            goruntu_w * 0.15
-            <= merkez_x
-            <= goruntu_w * 0.85
+        merkezde = (
+            goruntu_w * 0.10 <= merkez_x <= goruntu_w * 0.82
+            and goruntu_h * 0.15 <= merkez_y <= goruntu_h * 0.82
         )
 
-        dikey_merkezde = (
-            goruntu_h * 0.18
-            <= merkez_y
-            <= goruntu_h * 0.82
-        )
-
-        # I, İ ve J gibi ince harfler için genişlik sınırı düşük tutuldu.
-        yeterince_buyuk = (
-            yukseklik_orani >= 0.37
+        buyuk_harf = (
+            yukseklik_orani >= 0.34
             and genislik_orani >= 0.035
-            and alan_orani >= 0.006
+            and alan_orani >= 0.004
         )
 
-        if yeterince_buyuk and yatay_merkezde and dikey_merkezde:
+        if merkezde and buyuk_harf:
             return True
 
     return False
 
 
 def _tas_var_mi(hucre):
-    """
-    Taş kabul etmek için iki şartın da sağlanması gerekir:
-
-    1. Hücrenin büyük bölümü taş renginde olmalı.
-    2. Ortada büyük bir oyun harfi bulunmalı.
-
-    Böylece bonus karelerinin küçük H2/K2/H3/K3 yazıları elenir.
-    """
-    if not _tas_rengi_var_mi(hucre):
-        return False
-
-    if not _buyuk_harf_sekli_var_mi(hucre):
-        return False
-
-    return True
+    return _tas_rengi_var_mi(hucre) and _buyuk_harf_var_mi(hucre)
 
 
 def _hucre_hazirla(hucre):
     h, w = hucre.shape[:2]
 
-    # Izgara çizgileri ve sağ üstteki küçük puan rakamı dışarıda kalır.
-    y1 = int(h * 0.12)
-    y2 = int(h * 0.88)
-    x1 = int(w * 0.10)
-    x2 = int(w * 0.78)
+    # Sağ üstteki küçük puan rakamını dışarıda bırak.
+    bolge = hucre[
+        int(h * 0.10):int(h * 0.90),
+        int(w * 0.08):int(w * 0.78)
+    ]
 
-    kirpilmis = hucre[y1:y2, x1:x2]
-
-    kirpilmis = cv2.resize(
-        kirpilmis,
+    bolge = cv2.resize(
+        bolge,
         None,
-        fx=6.0,
-        fy=6.0,
+        fx=7.0,
+        fy=7.0,
         interpolation=cv2.INTER_CUBIC
     )
 
-    gri = cv2.cvtColor(kirpilmis, cv2.COLOR_BGR2GRAY)
+    gri = cv2.cvtColor(bolge, cv2.COLOR_BGR2GRAY)
     gri = cv2.GaussianBlur(gri, (3, 3), 0)
 
     _, ikili = cv2.threshold(
         gri,
         0,
         255,
-        cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+        cv2.THRESH_BINARY + cv2.THRESH_OTSU
     )
 
-    konturlar, _ = cv2.findContours(
+    ikili = cv2.copyMakeBorder(
         ikili,
-        cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE
-    )
-
-    temiz = np.zeros_like(ikili)
-    toplam_alan = ikili.shape[0] * ikili.shape[1]
-
-    for kontur in konturlar:
-        alan = cv2.contourArea(kontur)
-        _, _, kontur_genisligi, kontur_yuksekligi = cv2.boundingRect(kontur)
-
-        alan_yeterli = alan >= toplam_alan * 0.0015
-        yukseklik_yeterli = (
-            kontur_yuksekligi >= ikili.shape[0] * 0.14
-        )
-
-        if alan_yeterli and yukseklik_yeterli:
-            cv2.drawContours(
-                temiz,
-                [kontur],
-                -1,
-                255,
-                thickness=cv2.FILLED
-            )
-
-    # EasyOCR siyah harfi beyaz zeminde daha istikrarlı okuyabilir.
-    temiz = cv2.bitwise_not(temiz)
-
-    # Görüntünün çevresine boşluk ekle.
-    temiz = cv2.copyMakeBorder(
-        temiz,
         45,
         45,
         45,
@@ -290,19 +203,14 @@ def _hucre_hazirla(hucre):
         value=255
     )
 
-    return cv2.cvtColor(temiz, cv2.COLOR_GRAY2BGR)
+    return cv2.cvtColor(ikili, cv2.COLOR_GRAY2BGR)
 
 
 def _metni_temizle(metin):
-    """
-    OCR sonucunun içinden ilk uygun harfi seçmez.
-
-    Sonuç temizlendikten sonra tam olarak tek bir Türkçe harf değilse
-    reddedilir. Böylece H2 gibi sonuçlardan H seçilmez.
-    """
-    metin = str(metin).strip().upper()
-
-    metin = unicodedata.normalize("NFC", metin)
+    metin = unicodedata.normalize(
+        "NFC",
+        str(metin).strip().upper()
+    )
 
     donusumler = {
         "İ": "İ",
@@ -315,16 +223,7 @@ def _metni_temizle(metin):
     for eski, yeni in donusumler.items():
         metin = metin.replace(eski, yeni)
 
-    # Boşluk ve noktalama işaretlerini temizle.
-    temiz_karakterler = []
-
-    for karakter in metin:
-        if karakter.isalnum() or karakter in TURKCE_HARF_KUMESI:
-            temiz_karakterler.append(karakter)
-
-    metin = "".join(temiz_karakterler)
-
-    # Rakam veya birden fazla karakter bulunuyorsa reddet.
+    # Tam olarak tek karakter değilse reddet.
     if len(metin) != 1:
         return ""
 
@@ -339,9 +238,8 @@ def hucreyi_oku(hucre, tas_kontrol_edildi=False):
         return ".", 1.0
 
     hazir = _hucre_hazirla(hucre)
-    reader = _reader()
 
-    sonuc = reader.recognize(
+    sonuc = _reader().recognize(
         hazir,
         horizontal_list=None,
         free_list=None,
@@ -367,8 +265,7 @@ def hucreyi_oku(hucre, tas_kontrol_edildi=False):
     harf = _metni_temizle(en_iyi[1])
     guven = float(en_iyi[2])
 
-    # 0.05 çok düşüktü; rastgele yanlış okumaları kolayca kabul ediyordu.
-    if not harf or guven < 0.18:
+    if not harf or guven < 0.20:
         return ".", guven
 
     return harf, guven
@@ -389,7 +286,6 @@ def tahtayi_oku(kesilmis_tahta_bytes, boyut=15):
 
     tahta = []
     okunan_guvenler = []
-
     okunan_harf_sayisi = 0
     tespit_edilen_tas_sayisi = 0
 
@@ -404,9 +300,7 @@ def tahtayi_oku(kesilmis_tahta_bytes, boyut=15):
 
             hucre = gorsel[y1:y2, x1:x2]
 
-            tas_var = _tas_var_mi(hucre)
-
-            if not tas_var:
+            if not _tas_var_mi(hucre):
                 tahta_satiri.append(".")
                 continue
 
@@ -424,6 +318,13 @@ def tahtayi_oku(kesilmis_tahta_bytes, boyut=15):
                 okunan_guvenler.append(guven)
 
         tahta.append(tahta_satiri)
+
+    # Çok fazla taş tespit edilirse yanlış tabloyu uygulama.
+    if tespit_edilen_tas_sayisi > 60:
+        raise ValueError(
+            "Bonus kareleri taş sanıldı. "
+            "Tahtanın tamamının net göründüğü başka bir ekran görüntüsü yükle."
+        )
 
     ortalama_guven = (
         sum(okunan_guvenler) / len(okunan_guvenler)
