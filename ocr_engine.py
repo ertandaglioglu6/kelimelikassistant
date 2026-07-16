@@ -32,50 +32,48 @@ def _png_bytes_to_bgr(gorsel_bytes):
 
 
 def _tas_rengi_var_mi(hucre):
-    """
-    Kelimelik taşlarının iki ana rengini kabul eder:
-    - Açık sarı taş
-    - Turuncu son oynanan taş
-
-    H2, H3, K2 ve K3 bonus renklerini reddeder.
-    """
     h, w = hucre.shape[:2]
 
     if h < 10 or w < 10:
         return False
 
+    # Yazıdan etkilenmemek için hücrenin iç kısmının tamamını kullan.
     ic = hucre[
-        int(h * 0.18):int(h * 0.82),
-        int(w * 0.18):int(w * 0.82)
+        int(h * 0.16):int(h * 0.84),
+        int(w * 0.16):int(w * 0.84)
     ]
 
     if ic.size == 0:
         return False
 
     hsv = cv2.cvtColor(ic, cv2.COLOR_BGR2HSV)
+    pikseller = hsv.reshape(-1, 3)
 
-    medyan = np.median(
-        hsv.reshape(-1, 3),
-        axis=0
+    h_degerleri = pikseller[:, 0]
+    s_degerleri = pikseller[:, 1]
+    v_degerleri = pikseller[:, 2]
+
+    # Normal sarı taşlar.
+    sari_maske = (
+        (h_degerleri >= 18)
+        & (h_degerleri <= 30)
+        & (s_degerleri >= 75)
+        & (s_degerleri <= 165)
+        & (v_degerleri >= 205)
     )
 
-    renk_h, doygunluk, parlaklik = medyan
-
-    acik_sari_tas = (
-        19 <= renk_h <= 28
-        and 85 <= doygunluk <= 155
-        and parlaklik >= 210
+    # Son oynanan turuncu taşlar.
+    turuncu_maske = (
+        (h_degerleri >= 7)
+        & (h_degerleri <= 19)
+        & (s_degerleri >= 160)
+        & (v_degerleri >= 170)
     )
 
-    turuncu_tas = (
-        8 <= renk_h <= 18
-        and doygunluk >= 175
-        and parlaklik >= 150
-    )
+    tas_orani = float(np.mean(sari_maske | turuncu_maske))
 
-    return bool(acik_sari_tas or turuncu_tas)
-
-
+    # Hücrenin önemli kısmı taş rengindeyse taş kabul et.
+    return tas_orani >= 0.42
 def _buyuk_harf_var_mi(hucre):
     """
     Taşın ortasında büyük ve koyu bir harf bulunmasını şart koşar.
@@ -163,7 +161,7 @@ def _buyuk_harf_var_mi(hucre):
 
 
 def _tas_var_mi(hucre):
-    return _tas_rengi_var_mi(hucre) and _buyuk_harf_var_mi(hucre)
+    return _tas_rengi_var_mi(hucre)
 
 
 def _hucre_hazirla(hucre):
