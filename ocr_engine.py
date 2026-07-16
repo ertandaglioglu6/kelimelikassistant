@@ -33,47 +33,48 @@ def _png_bytes_to_bgr(gorsel_bytes):
 
 def _tas_var_mi(hucre):
     """
-    Sarı ve turuncu taşları RGB farkıyla algılar.
-    Gri, mavi, yeşil ve pembe bonus karelerini reddeder.
+    Hücrenin merkezine değil dört köşesindeki arka plan rengine bakar.
+    Böylece ortadaki H2, H3, K2 ve K3 yazıları taş sanılmaz.
     """
     h, w = hucre.shape[:2]
 
     if h < 10 or w < 10:
         return False
 
-    ic = hucre[
-        int(h * 0.18):int(h * 0.82),
-        int(w * 0.18):int(w * 0.82)
+    hsv = cv2.cvtColor(hucre, cv2.COLOR_BGR2HSV)
+
+    yamalar = [
+        hsv[int(h * 0.15):int(h * 0.32), int(w * 0.15):int(w * 0.32)],
+        hsv[int(h * 0.15):int(h * 0.32), int(w * 0.68):int(w * 0.85)],
+        hsv[int(h * 0.68):int(h * 0.85), int(w * 0.15):int(w * 0.32)],
+        hsv[int(h * 0.68):int(h * 0.85), int(w * 0.68):int(w * 0.85)],
     ]
 
-    if ic.size == 0:
-        return False
+    uygun_kose = 0
 
-    # OpenCV BGR kullanır.
-    b, g, r = cv2.split(ic.astype(np.int16))
+    for yama in yamalar:
+        if yama.size == 0:
+            continue
 
-    # Açık sarı taş.
-    sari = (
-        (r >= 185)
-        & (g >= 155)
-        & ((r - b) >= 28)
-        & ((g - b) >= 18)
-        & (np.abs(r - g) <= 95)
-    )
+        medyan = np.median(yama.reshape(-1, 3), axis=0)
+        renk, doygunluk, parlaklik = medyan
 
-    # Turuncu taş.
-    turuncu = (
-        (r >= 190)
-        & (g >= 70)
-        & (g <= 190)
-        & ((r - g) >= 35)
-        & ((g - b) >= 25)
-    )
+        sari_tas = (
+            18 <= renk <= 32
+            and 65 <= doygunluk <= 180
+            and parlaklik >= 185
+        )
 
-    tas_orani = float(np.mean(sari | turuncu))
-    return tas_orani >= 0.28
+        turuncu_tas = (
+            5 <= renk <= 18
+            and doygunluk >= 150
+            and parlaklik >= 150
+        )
 
+        if sari_tas or turuncu_tas:
+            uygun_kose += 1
 
+    return uygun_kose >= 3
 def _metni_temizle(metin):
     metin = unicodedata.normalize(
         "NFC",
@@ -255,6 +256,12 @@ def tahtayi_oku(kesilmis_tahta_bytes, boyut=15):
     if tespit_edilen_tas_sayisi == 0:
         raise ValueError(
             "Taş rengi algılanamadı. Yüklediğin ekran görüntüsünü kırpmadan tekrar dene."
+        )
+
+    if tespit_edilen_tas_sayisi > 55:
+        raise ValueError(
+            f"{tespit_edilen_tas_sayisi} taş tespit edildi. "
+            "Bonus kareleri taş sanılmış olabilir."
         )
 
     if okunan_harf_sayisi == 0:
