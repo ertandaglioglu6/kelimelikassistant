@@ -5,6 +5,8 @@ import cv2
 import easyocr
 import numpy as np
 
+from vision_engine import harfi_tani
+
 
 TURKCE_HARFLER = "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ"
 TURKCE_HARF_KUMESI = set(TURKCE_HARFLER)
@@ -175,6 +177,17 @@ def hucreyi_oku(hucre):
     if not _tas_var_mi(hucre):
         return ".", 1.0
 
+    # Önce Kelimelik'e özel model.
+    try:
+        harf, guven, fark = harfi_tani(hucre)
+
+        # Model yeterince eminse EasyOCR'a hiç gitme.
+        if harf in TURKCE_HARF_KUMESI and guven >= 0.34 and fark >= 0.08:
+            return harf, min(0.99, 0.55 + guven * 0.44)
+    except Exception:
+        harf, guven, fark = "", 0.0, 0.0
+
+    # Emin olunmayan hücrelerde EasyOCR yedek olarak çalışır.
     reader = _reader()
     bulunanlar = []
 
@@ -198,27 +211,31 @@ def hucreyi_oku(hucre):
             sonuc = []
 
         for item in sonuc:
-            harf = _metni_temizle(item[1])
-            guven = float(item[2])
+            ocr_harfi = _metni_temizle(item[1])
+            ocr_guveni = float(item[2])
 
-            if harf:
-                bulunanlar.append((harf, guven))
+            if ocr_harfi:
+                bulunanlar.append((ocr_harfi, ocr_guveni))
 
-    if not bulunanlar:
-        return ".", 0.0
+    if bulunanlar:
+        ocr_harfi, ocr_guveni = max(
+            bulunanlar,
+            key=lambda item: item[1]
+        )
 
-    harf, guven = max(
-        bulunanlar,
-        key=lambda item: item[1]
-    )
+        # İki yöntem aynı harfi söylüyorsa güveni artır.
+        if harf and ocr_harfi == harf:
+            return harf, min(0.99, max(ocr_guveni, 0.70 + guven * 0.25))
 
-    # Şimdilik düşük tutuyoruz; yanlışları sonradan tek tek sıkılaştırırız.
-    if guven < 0.05:
-        return ".", guven
+        # EasyOCR çok eminse onu kullan.
+        if ocr_guveni >= 0.82:
+            return ocr_harfi, ocr_guveni
 
-    return harf, guven
+    # OCR emin değilse oyuna özel modelin sonucunu kullan.
+    if harf in TURKCE_HARF_KUMESI:
+        return harf, max(0.20, guven)
 
-
+    return ".", 0.0
 def tahtayi_oku(kesilmis_tahta_bytes, boyut=15):
     gorsel = _png_bytes_to_bgr(kesilmis_tahta_bytes)
 
